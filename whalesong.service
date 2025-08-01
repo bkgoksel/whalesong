@@ -1,11 +1,10 @@
 [Unit]
-Description=Whale Sound Player
+Description=WhaleSong
 After=sound.target
 
 [Service]
 Type=simple
-User=kerem
-ExecStart=/usr/bin/python3 /home/kerem/whale-sounds/whalesong.py
+ExecStart=/home/kerem/whalesong/.venv/bin/python /home/kerem/whalesong/main.py
 Restart=on-failure
 RestartSec=5
 
