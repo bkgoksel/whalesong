@@ -1,0 +1,13 @@
+[Unit]
+Description=Whale Sound Player
+After=sound.target
+
+[Service]
+Type=simple
+User=kerem
+ExecStart=/usr/bin/python3 /home/kerem/whale-sounds/whalesong.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
