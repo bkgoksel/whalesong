@@ -286,10 +286,10 @@ def trigger(button_index):
     bank = button_index // 2
     for whale in voice_banks[bank]:
         if button_index % 2 == 1:
-            whale.amplitude.boost(boost_amount=0.1, ramp_time=4)
-            whale.base_freq.boost(ramp_time=2)
+            whale.amplitude.boost(boost_amount=0.05, ramp_time=1.5)
+            whale.base_freq.boost(ramp_time=1)
         else:
-            whale.amplitude.boost()
+            whale.amplitude.boost(boost_amount=0.05)
 
 
 inputs: Inputs = GPIOButtonInputs(
@@ -308,8 +308,8 @@ inputs: Inputs = GPIOButtonInputs(
 inputs: Inputs = KeyboardInputs(
     keys={
         "q": lambda: trigger(0),
-        "w": lambda: trigger(1),
         "e": lambda: trigger(2),
+        "w": lambda: trigger(1),
         "r": lambda: trigger(3),
         "t": lambda: trigger(4),
         "y": lambda: trigger(5),
