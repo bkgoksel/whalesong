@@ -27,6 +27,7 @@ sudo .venv/bin/python main.py
 
 ## Configuring the merged audio device
 
+Make sure the audio cards you want to use are plugged in.
 Run the following command to list available devices:
 
 ```
@@ -43,6 +44,8 @@ sudo cp asound.conf /etc/asound.conf
 ```
 
 ## Installation as a system service on a RasPi
+
+Update the last line of `start.sh` and replace `/home/kerem/whalesong` with the absolute path to *this* directory on your system.
 
 ```
 sudo cp whalesong.service /etc/systemd/system/

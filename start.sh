@@ -1,7 +1,5 @@
 #!/bin/sh
 
-# This script safely restarts the JACK Audio Connection Kit server.
-
 echo "--- JACK Audio Server Restart ---"
 
 # Check if a jackd process is currently running.
@@ -21,16 +19,6 @@ sleep 1
 
 echo "Starting a new jackd process in the background..."
 
-# --- IMPORTANT ---
-# You will likely need to edit the command below to match your hardware and needs.
-#
-# COMMON PARAMETERS:
-# -d alsa         # Use the ALSA backend
-# -d hw:0         # Use ALSA hardware device 0 (find yours with 'aplay -l')
-# -r 48000        # Set sample rate to 48kHz
-# -p 1024         # Set buffer size (frames per period) to 1024
-# -n 2            # Set number of periods to 2
-
 JACK_NO_AUDIO_RESERVATION=1 jackd -d alsa -d fourplay -r 44100 -p 1024 &
 
 # Give jackd a couple of seconds to initialize.
@@ -44,4 +32,5 @@ else
 fi
 
 echo "-------------------------------"
+# TODO: Update the path here to match the absolute path of the repo on your system.
 /home/kerem/whalesong/.venv/bin/python /home/kerem/whalesong/main.py
