@@ -9,7 +9,10 @@ dependencies = [
     "keyboard>=0.13.5",
     "lgpio>=0.2.2.0", # TODO: remove if not reading GPIO directly into RasPi
     "pigpio>=1.78",
-    "pyo>=1.0.5",
+    "pyo",
     "rpi-gpio>=0.7.1", # TODO: remove if not reading GPIO directly into RasPi
     "spidev>=3.7", # TODO: remove if not reading GPIO directly into RasPi
 ]
+
+[tool.uv.sources]
+pyo = { path = "pyo-1.0.6-cp311-cp311-linux_aarch64.whl" }

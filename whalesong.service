@@ -4,7 +4,7 @@ After=sound.target
 
 [Service]
 Type=simple
-ExecStart=/home/kerem/whalesong/.venv/bin/python /home/kerem/whalesong/main.py
+ExecStart=/home/kerem/whalesong/start.sh
 Restart=on-failure
 RestartSec=5
 

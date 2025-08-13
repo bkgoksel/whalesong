@@ -1,6 +1,7 @@
 import pyo
 from dataclasses import dataclass, field
 import RPi.GPIO as GPIO
+
 import keyboard
 import threading
 import time
@@ -67,25 +68,8 @@ class KeyboardInputs(Inputs):
 
 # 1. --- Server Setup ---
 # Initialize and boot the pyo audio server.
-s = pyo.Server(duplex=0, buffersize=2048, nchnls=2)
-s.deactivateMidi()
-devices = pyo.pa_get_devices_infos()
-device_index = -1
-
-for d in devices:
-    for idx, dev_info in d.items():
-        # TODO: Update this to detect the devices we want
-        if "name" in dev_info and "USB Audio Device" in dev_info["name"]:
-            device_index = idx
-            break
-    if device_index != -1:
-        break
-
-if device_index == -1:
-    device_index = 0
-
-s.setInOutDevice(device_index)
-s.boot()
+s = pyo.Server(audio="jack", nchnls=4).boot()
+s.start()
 
 
 @dataclass
@@ -264,7 +248,7 @@ for bank in freq_banks:
             )
         )
 # Mix the output of all voices together. We use a stereo mix here.
-mixed_voices = pyo.Mix([v.osc for bank in voice_banks for v in bank], voices=2)
+mixed_voices = pyo.Mix([v.osc for bank in voice_banks for v in bank], voices=4)
 
 
 # Effects chain, processing the mixed signal in series.
@@ -277,7 +261,6 @@ reverb = pyo.Freeverb(filter, size=0.9, damp=0.7, bal=0.6)
 
 
 # 6. --- Start the Engine ---
-s.start()
 print("Audio engine started. Generating soundscape...")
 print("Press Ctrl+C in the console to stop.")
 
@@ -292,6 +275,7 @@ def trigger(button_index):
             whale.amplitude.boost(boost_amount=0.05)
 
 
+"""
 inputs: Inputs = GPIOButtonInputs(
     pins={
         7: lambda: trigger(0),
@@ -304,6 +288,7 @@ inputs: Inputs = GPIOButtonInputs(
         18: lambda: trigger(7),
     }
 )
+"""
 
 inputs: Inputs = KeyboardInputs(
     keys={
