@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 import pyo
 from dataclasses import dataclass, field, InitVar
 import RPi.GPIO as GPIO
@@ -185,6 +186,24 @@ def parse_args():
     return parser.parse_args()
 
 
+@dataclass
+class ClipPlayer:
+    clip_paths: InitVar[list[Path]]
+    players: list[pyo.SfPlayer] = field(init=False)
+    n_channels: int
+
+    def __post_init__(self, clip_paths: list[Path]):
+        self.players = [pyo.SfPlayer(str(clip), mul=0.8) for clip in clip_paths]
+
+    def play_random(self):
+        pan_point = random.randint(0, self.n_channels) / self.n_channels
+        player = random.choice(self.players)
+        mix = player.mix(voices=self.n_channels)
+        pan = pyo.Pan(mix, outs=self.n_channels, pan=pan_point, spread=0)
+        pan.out()
+        player.out()
+
+
 def main():
     args = parse_args()
 
@@ -208,8 +227,13 @@ def main():
         if device_index == -1:
             raise ValueError(f"Device {args.device_name} not found on system")
         s.setInOutDevice(device_index)
+
     s.boot()
     s.start()
+
+    project_dir = Path(__file__).parent.resolve()
+    clip_files = list((project_dir / "processed").glob("**/*.wav"))
+    clip_player = ClipPlayer(clip_files, args.n_channels)
 
     # 4. --- Audio Routing and Initialization ---
     FREQ_DECAY_TIME = 2
@@ -363,6 +387,7 @@ def main():
             "x": lambda: trigger(13),
             "c": lambda: trigger(14),
             "v": lambda: trigger(15),
+            "b": lambda: clip_player.play_random(),
         }
     )
 
