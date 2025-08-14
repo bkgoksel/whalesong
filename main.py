@@ -201,7 +201,6 @@ class ClipPlayer:
         player = random.choice(self.players)
         speed = 1 if random.random() < 0.6 else -1
         player.setSpeed(speed)
-        print(f"channel: {channel}")
         player.out(channel)
 
 
