@@ -164,10 +164,11 @@ class WhaleVoice:
         self.lfo = pyo.LFO(
             freq=self.freq_modulation_rate, mul=self.freq_modulation.value
         )
-        self.oscs = [
-            pyo.Sine(freq=freq + self.freq_boost.value + self.lfo) for freq in freqs
-        ]
-        self.mix = pyo.Mix(self.oscs, voices=1, mul=self.amplitude.value)
+        self.osc = pyo.Sine(
+            freq=[f + self.freq_boost.value + self.lfo for f in freqs],
+            mul=[0.9 for _ in freqs],
+        )
+        self.mix = pyo.Mix(self.osc, voices=1, mul=self.amplitude.value)
         self.pan = pyo.Pan(
             self.mix, outs=num_pan_channels, pan=self.pan_point.value, spread=0.05
         )
@@ -196,12 +197,12 @@ class ClipPlayer:
         self.players = [pyo.SfPlayer(str(clip), mul=0.8) for clip in clip_paths]
 
     def play_random(self):
-        pan_point = random.randint(0, self.n_channels) / self.n_channels
+        channel = random.randint(0, self.n_channels - 1)
         player = random.choice(self.players)
-        mix = player.mix(voices=self.n_channels)
-        pan = pyo.Pan(mix, outs=self.n_channels, pan=pan_point, spread=0)
-        pan.out()
-        player.out()
+        speed = 1 if random.random() < 0.6 else -1
+        player.setSpeed(speed)
+        print(f"channel: {channel}")
+        player.out(channel)
 
 
 def main():
@@ -232,7 +233,7 @@ def main():
     s.start()
 
     project_dir = Path(__file__).parent.resolve()
-    clip_files = list((project_dir / "processed").glob("**/*.wav"))
+    clip_files = list((project_dir / "mono").glob("**/*.wav"))
     clip_player = ClipPlayer(clip_files, args.n_channels)
 
     # 4. --- Audio Routing and Initialization ---
