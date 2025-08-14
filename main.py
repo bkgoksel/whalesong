@@ -81,6 +81,7 @@ class DecayingParameter:
 
     base_value: float  # base value that this always decays to.
     decay_time: float  # time it takes for this to decay back to its base value after boosting is done.
+    wraparound: bool = False
     max_value: float = (
         1.0  # maximum value you can boost up to, gets clamped at this value.
     )
@@ -120,7 +121,14 @@ class DecayingParameter:
         boost_amount = boost_amount or self.default_boost
         with self.lock:
             current_value = self.value.get()
-            self.target_value = min(current_value + boost_amount, self.max_value)
+            new_value = current_value + boost_amount
+            if new_value > self.max_value:
+                if self.wraparound:
+                    self.target_value = self.min_value + (new_value - self.max_value)
+                else:
+                    self.target_value = self.max_value
+            else:
+                self.target_value = new_value
             if ramp_time > 0:
                 self.value.value = pyo.SigTo(
                     value=self.target_value,
@@ -146,16 +154,20 @@ class WhaleVoice:
     base_freq: DecayingParameter
     amplitude: DecayingParameter
     freq_modulation: DecayingParameter
+    pan_point: DecayingParameter
     freq_modulation_rate: float = 0.2
     lfo: pyo.LFO = field(init=False)
+    pan_lfo: pyo.Sine = field(init=False)
 
     def __post_init__(self):
+        self.pan_lfo = pyo.Sine(freq=0.1, mul=0.2)
         self.lfo = pyo.LFO(
             freq=self.freq_modulation_rate, mul=self.freq_modulation.value
         )
         self.osc = pyo.Sine(
             freq=self.base_freq.value + self.lfo, mul=self.amplitude.value
         )
+        self.pan = pyo.Pan(self.osc, outs=4, pan=self.pan_point.value, spread=0.1)
 
 
 # 4. --- Audio Routing and Initialization ---
@@ -215,9 +227,9 @@ freq_banks = [
     ],
 ]
 voice_banks = []
-for bank in freq_banks:
+for bank_idx, bank in enumerate(freq_banks):
     voice_banks.append([])
-    for freq in bank:
+    for voice_idx, freq in enumerate(bank):
         base_freq = DecayingParameter(
             base_value=freq,
             decay_time=FREQ_DECAY_TIME,
@@ -239,16 +251,24 @@ for bank in freq_banks:
             min_value=25,
             default_boost=FREQ_MOD_BOOST_AMT,
         )
+        pan_point = DecayingParameter(
+            decay_time=1,
+            base_value=bank_idx * 0.25 + voice_idx * 0.05,
+            max_value=1.0,
+            min_value=0.0,
+            default_boost=1.0,
+        )
         voice_banks[-1].append(
             WhaleVoice(
                 base_freq=base_freq,
                 amplitude=amplitude,
                 freq_modulation=freq_modulation,
                 freq_modulation_rate=0.05 + random.random(),
+                pan_point=pan_point,
             )
         )
 # Mix the output of all voices together. We use a stereo mix here.
-mixed_voices = pyo.Mix([v.osc for bank in voice_banks for v in bank], voices=4)
+mixed_voices = pyo.Mix([v.pan for bank in voice_banks for v in bank], voices=4)
 
 
 # Effects chain, processing the mixed signal in series.
@@ -269,10 +289,11 @@ def trigger(button_index):
     bank = button_index // 2
     for whale in voice_banks[bank]:
         if button_index % 2 == 1:
-            whale.amplitude.boost(boost_amount=0.05, ramp_time=1.5)
+            whale.amplitude.boost(boost_amount=0.2)
             whale.base_freq.boost(ramp_time=1)
+            whale.pan_point.boost(ramp_time=1)
         else:
-            whale.amplitude.boost(boost_amount=0.05)
+            whale.amplitude.boost(boost_amount=0.5)
 
 
 """
@@ -310,7 +331,6 @@ inputs: Inputs = KeyboardInputs(
         "v": lambda: trigger(15),
     }
 )
-
 
 try:
     inputs.listen()
