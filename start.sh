@@ -33,4 +33,4 @@ fi
 
 echo "-------------------------------"
 # TODO: Update the path here to match the absolute path of the repo on your system.
-/home/kerem/whalesong/.venv/bin/python /home/kerem/whalesong/main.py
+/home/kerem/whalesong/.venv/bin/python /home/kerem/whalesong/main.py --audio-driver jack --n-channels 4 --input-type keyboard
